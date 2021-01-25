@@ -1,19 +1,28 @@
 package com.example.nettydemo.controller;
 
+import com.example.nettydemo.annotation.NettyController;
+import com.example.nettydemo.annotation.NettyRequestMapping;
 import com.example.nettydemo.enums.ErrorEnum;
+import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.except.CmdbException;
 import com.example.nettydemo.utils.NettyVoUtils;
 import com.example.nettydemo.utils.ResponseUtils;
 import com.example.nettydemo.vo.NettyVo;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@NettyController(path = "/class")
 public class CmdbTest {
+
+    @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
+    public void testAnnotation(String req, String rep){
+
+        System.out.println("hello world: " + req + " : " + rep);
+
+    }
 
     public void doTask(FullHttpRequest request, FullHttpResponse response){
 

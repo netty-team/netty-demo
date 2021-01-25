@@ -1,18 +1,33 @@
 package com.example.nettydemo.netty;
 
+import com.example.nettydemo.annotation.NettyController;
+import com.example.nettydemo.annotation.NettyRequestMapping;
 import com.example.nettydemo.controller.CmdbTest;
+import com.example.nettydemo.enums.ErrorEnum;
+import com.example.nettydemo.enums.HTTPMethod;
+import com.example.nettydemo.utils.NettyVoUtils;
+import com.example.nettydemo.utils.ResponseUtils;
+import com.example.nettydemo.vo.NettyVo;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /***
  * 服务端自定义业务处理handler
@@ -27,16 +42,29 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
     private final static String BAD_REQUEST = "400";
     private final static String INTERNAL_SERVER_ERROR = "500";
     private static Map<String, HttpResponseStatus> mapStatus = new HashMap<String, HttpResponseStatus>();
+    private static Map<String, Class<?>> controllerMap = new HashMap<>();
 
     static {
         mapStatus.put(LOC, HttpResponseStatus.FOUND);
         mapStatus.put(NOT_FOND, HttpResponseStatus.NOT_FOUND);
         mapStatus.put(BAD_REQUEST, HttpResponseStatus.BAD_REQUEST);
         mapStatus.put(INTERNAL_SERVER_ERROR, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-    }
 
-    @Autowired
-    private CmdbTest test;
+
+        Reflections reflections = new Reflections(new ConfigurationBuilder()
+                .setUrls(ClasspathHelper.forPackage("com.example.nettydemo.controller"))
+                .setScanners(new TypeAnnotationsScanner(), new SubTypesScanner()));
+
+        Set<Class<?>> nettyConstructors = reflections.getTypesAnnotatedWith(NettyController.class);
+        nettyConstructors.forEach(nettyController -> {
+
+            NettyController annotation = nettyController.getAnnotation(NettyController.class);
+            String path = annotation.path();
+
+            controllerMap.put(path, nettyController);
+
+        });
+    }
 
     /**
      * 对每一个传入的消息都要调用；
@@ -62,7 +90,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
                 httpResponse.setStatus(mapStatus.get(uri));
                 httpResponse.content().writeBytes(mapStatus.get(uri).toString().getBytes());
             } else {
-                test.doTask(request, httpResponse);
+                dispatcher(request, httpResponse);
             }
 
             //重定向处理
@@ -77,6 +105,69 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
                 ctx.writeAndFlush(httpResponse).addListener(ChannelFutureListener.CLOSE);
             }
         }
+    }
+
+    public void dispatcher(FullHttpRequest request, FullHttpResponse response){
+
+        String uri = request.uri();
+        String reqMethodName = request.method().name();
+
+        controllerMap.forEach((k, v) -> {
+
+            if (uri.startsWith(k)){
+                String subK = uri.substring(k.length());
+
+                Method[] methods = v.getMethods();
+
+                for (Method method: methods){
+
+                    NettyRequestMapping annotation = method.getAnnotation(NettyRequestMapping.class);
+                    if (annotation != null){
+
+                        String methodPath = annotation.path();
+                        HTTPMethod[] httpMethodArray = annotation.method();
+
+                        //判断方法路径是否一致
+                        if (subK.equals(methodPath)){
+
+                            // 判断请求方式是否包含
+                            boolean flag = false;
+                            for(int i = 0; i < httpMethodArray.length; i++){
+
+                                if (reqMethodName.equals(httpMethodArray[i].getValue())){
+                                    flag = true;
+                                }
+                            }
+
+                            if (!flag){
+                                continue;
+                            }
+
+                            try {
+
+                                method.invoke(v.newInstance(), request, response);
+
+                            } catch (InstantiationException e) {
+                                e.printStackTrace();
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    }
+                }
+            }
+        });
+
+//        if (!isExist){
+//
+//            NettyVo vo = NettyVoUtils.failed(ErrorEnum.REQUEST_INVALID_METHOD.getCode(),
+//                    "没有找到适配的请求方法");
+//
+//            ResponseUtils.doJsonResult(vo, response);
+//        }
     }
 
 
