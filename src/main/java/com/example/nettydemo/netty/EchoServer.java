@@ -36,8 +36,8 @@ public class EchoServer {
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     private Channel channel;
 
-    @Autowired
-    EchoServerHandler serverHandler;
+//    @Autowired
+//    EchoServerHandler serverHandler;
     /**
      * 启动服务
      * @param hostname
@@ -45,7 +45,7 @@ public class EchoServer {
      * @return
      * @throws Exception
      */
-    public ChannelFuture start(String hostname, int port) throws Exception {
+    public ChannelFuture start(String hostname, int port, ChannelInboundHandlerAdapter adapter) throws Exception {
 
 //        final EchoServerHandler serverHandler = new EchoServerHandler();
         ChannelFuture f = null;
@@ -59,15 +59,18 @@ public class EchoServer {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
 //                            为监听客户端read/write事件的Channel添加用户自定义的ChannelHandler
-                            socketChannel.pipeline().addLast("http-decoder",new HttpRequestDecoder());
-                            //将多个消息转换为单一的FullHttpRequest或FullHttpResponse对象
-                            socketChannel.pipeline().addLast("http-aggregator",new HttpObjectAggregator(65535));
-                            // server端发送的是httpResponse，所以要使用HttpResponseEncoder进行编码
-                            socketChannel.pipeline().addLast("http-encoder",new HttpResponseEncoder());
-                            //解决大数据包传输问题，用于支持异步写大量数据流并且不需要消耗大量内存也不会导致内存溢出错误( OutOfMemoryError )。
-                            //仅支持ChunkedInput类型的消息。也就是说，仅当消息类型是ChunkedInput时才能实现ChunkedWriteHandler提供的大数据包传输功能
-                            socketChannel.pipeline().addLast("http-chunked",new ChunkedWriteHandler());//解决大码流的问题
-                            socketChannel.pipeline().addLast("http-server", serverHandler);
+//                            socketChannel.pipeline().addLast("http-decoder",new HttpRequestDecoder());
+//                            //将多个消息转换为单一的FullHttpRequest或FullHttpResponse对象
+//                            socketChannel.pipeline().addLast("http-aggregator",new HttpObjectAggregator(65535));
+//                            // server端发送的是httpResponse，所以要使用HttpResponseEncoder进行编码
+//                            socketChannel.pipeline().addLast("http-encoder",new HttpResponseEncoder());
+//                            //解决大数据包传输问题，用于支持异步写大量数据流并且不需要消耗大量内存也不会导致内存溢出错误( OutOfMemoryError )。
+//                            //仅支持ChunkedInput类型的消息。也就是说，仅当消息类型是ChunkedInput时才能实现ChunkedWriteHandler提供的大数据包传输功能
+//                            socketChannel.pipeline().addLast("http-chunked",new ChunkedWriteHandler());//解决大码流的问题
+                            socketChannel.pipeline().addLast(new HttpServerCodec());
+                            socketChannel.pipeline().addLast(new HttpObjectAggregator(65536));
+                            socketChannel.pipeline().addLast(new ChunkedWriteHandler());
+                            socketChannel.pipeline().addLast(adapter);
 
                         }
                     });

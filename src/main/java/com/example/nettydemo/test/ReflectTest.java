@@ -116,5 +116,8 @@ public class ReflectTest {
 //        });
 //        //TODO 输出到控制台,此处存数据库即可
 //        System.out.println(JSON.toJSONString(list));
+
+        String st = "xxx";
+
     }
 }

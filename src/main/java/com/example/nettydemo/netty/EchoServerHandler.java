@@ -1,13 +1,9 @@
 package com.example.nettydemo.netty;
 
+import com.example.nettydemo.annotation.FileHandler;
 import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
-import com.example.nettydemo.controller.CmdbTest;
-import com.example.nettydemo.enums.ErrorEnum;
 import com.example.nettydemo.enums.HTTPMethod;
-import com.example.nettydemo.utils.NettyVoUtils;
-import com.example.nettydemo.utils.ResponseUtils;
-import com.example.nettydemo.vo.NettyVo;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -19,10 +15,8 @@ import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -90,7 +84,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
                 httpResponse.setStatus(mapStatus.get(uri));
                 httpResponse.content().writeBytes(mapStatus.get(uri).toString().getBytes());
             } else {
-                dispatcher(request, httpResponse);
+                dispatcher(ctx, request, httpResponse);
             }
 
             //重定向处理
@@ -107,7 +101,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    public void dispatcher(FullHttpRequest request, FullHttpResponse response){
+    public void dispatcher(ChannelHandlerContext ctx, FullHttpRequest request, FullHttpResponse response){
 
         String uri = request.uri();
         String reqMethodName = request.method().name();
@@ -145,7 +139,14 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
                             try {
 
-                                method.invoke(v.newInstance(), request, response);
+                                FileHandler fileHandler = method.getAnnotation(FileHandler.class);
+                                if (fileHandler != null){
+                                    method.invoke(v.newInstance(), ctx, request, response);
+                                    break;
+                                }else {
+                                    method.invoke(v.newInstance(), request, response);
+                                    break;
+                                }
 
                             } catch (InstantiationException e) {
                                 e.printStackTrace();

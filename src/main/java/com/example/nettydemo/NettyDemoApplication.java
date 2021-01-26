@@ -1,6 +1,9 @@
 package com.example.nettydemo;
 
 import com.example.nettydemo.netty.EchoServer;
+import com.example.nettydemo.netty.EchoServerHandler;
+import com.example.nettydemo.netty.FileServerHandler;
+import com.example.nettydemo.pool.BussinessTheadPool;
 import io.netty.channel.ChannelFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,14 +14,37 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class NettyDemoApplication implements CommandLineRunner {
 
-    @Value("${netty.port}")
-    private int port;
+    @Value("${netty.json.port}")
+    private int jsonPort;
+
+    @Value("${netty.file.port}")
+    private int filePort;
 
     @Value("${netty.url}")
     private String url;
 
+    @Value("${thredpool.coreSize}")
+    private int coreSize;
+
+    @Value("${thredpool.maxSize}")
+    private int maxSize;
+
+    @Value("${thredpool.queueCapacity}")
+    private int queueCapacity;
+
+    @Value("${thredpool.threadNamePrefix}")
+    private String threadNamePrefix;
+
     @Autowired
     private EchoServer server;
+
+    @Autowired
+    private EchoServerHandler echoServerHandler;
+
+    @Autowired
+    private FileServerHandler fileServerHandler;
+
+    private BussinessTheadPool theadPool;
 
 
     public static void main(String[] args) {
@@ -28,17 +54,35 @@ public class NettyDemoApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        ChannelFuture start = server.start(url, port);
+        ChannelFuture startJson = server.start(url, jsonPort, echoServerHandler);
+//        ChannelFuture startFile = server.start(url, filePort, fileServerHandler);
+
+        //初始化线程池
+        initThreadPool();
 
         Runtime.getRuntime().addShutdownHook(new Thread(){
             @Override
             public void run() {
 
                 server.destroy();
+                theadPool = null;
 
             }
         });
 
-        start.channel().closeFuture().syncUninterruptibly();
+        startJson.channel().closeFuture().syncUninterruptibly();
+//        startFile.channel().closeFuture().syncUninterruptibly();
+
+    }
+
+    public void initThreadPool(){
+
+        theadPool = BussinessTheadPool.Instance();
+        theadPool.setCorePoolSize(coreSize);
+        theadPool.setMaxPoolSize(maxSize);
+        theadPool.setQueueCapacity(queueCapacity);
+        theadPool.setThreadNamePrefix(threadNamePrefix);
+
+        theadPool.initialize();
     }
 }

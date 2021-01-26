@@ -13,8 +13,16 @@ management:
       enabled: true
 
 netty:
-  # 服务端口
-  port: 1024
+  json:
+    port: 1024
+  file:
+    port: 8080
   # 绑定的网卡
   url: 0.0.0.0
+
+thredpool:
+  coreSize: 1
+  maxSize: 200
+  queueCapacity: 10000
+  threadNamePrefix: "cmdb-thread-"
 
