@@ -6,10 +6,12 @@ import com.example.nettydemo.utils.ResponseUtils;
 import com.example.nettydemo.vo.NettyVo;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class TestServiceImpl implements TestService {
 
 

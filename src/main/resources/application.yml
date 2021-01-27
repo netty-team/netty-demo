@@ -1,28 +1,28 @@
+#日志配置
 logging:
   level:
-    root: DEBUG
+    root: ${LOGLEVEL:DEBUG}
+  file:
+    name: cmdb.log
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-  endpoint:
-    shutdown:
-      enabled: true
-
+#netty服务配置
 netty:
   json:
-    port: 1024
+    port: ${JSONPORT:1024}
   file:
-    port: 8080
+    port: ${FILEPORT:8080}
   # 绑定的网卡
   url: 0.0.0.0
 
+#bussiness线程池配置
 thredpool:
-  coreSize: 1
-  maxSize: 200
-  queueCapacity: 10000
+  coreSize: ${POOL_CORESIZE:1}
+  maxSize: ${POOL_MAXSIZE:200}
+  queueCapacity: ${POOL_QUEUE:10000}
   threadNamePrefix: "cmdb-thread-"
+
+#数据库连接
+#spring:
+#  datasource:
+#    type: com.alibaba.druid.pool.DruidDataSource
 

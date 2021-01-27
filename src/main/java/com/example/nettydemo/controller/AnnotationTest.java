@@ -13,6 +13,8 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.io.File;
@@ -28,13 +30,16 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 @NettyController(path = "/netty")
+@Component
 public class AnnotationTest {
 
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
     public static final int HTTP_CACHE_SECONDS = 60;
 
-    private TestService service = new TestServiceImpl();
+    @Autowired
+    private TestService service;
+//    private TestService service = new TestServiceImpl();
 
     @NettyRequestMapping(path = "/test", method = {HTTPMethod.GET, HTTPMethod.POST})
     public void test(FullHttpRequest req, FullHttpResponse rep){

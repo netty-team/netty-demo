@@ -4,6 +4,7 @@ import com.example.nettydemo.annotation.FileHandler;
 import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
 import com.example.nettydemo.enums.HTTPMethod;
+import com.example.nettydemo.utils.SpringContextUtils;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -111,6 +112,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
             if (uri.startsWith(k)){
                 String subK = uri.substring(k.length());
 
+                Object bean = SpringContextUtils.getBean(v);
                 Method[] methods = v.getMethods();
 
                 for (Method method: methods){
@@ -141,15 +143,13 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
                                 FileHandler fileHandler = method.getAnnotation(FileHandler.class);
                                 if (fileHandler != null){
-                                    method.invoke(v.newInstance(), ctx, request, response);
+                                    method.invoke(bean, ctx, request, response);
                                     break;
                                 }else {
-                                    method.invoke(v.newInstance(), request, response);
+                                    method.invoke(bean, request, response);
                                     break;
                                 }
 
-                            } catch (InstantiationException e) {
-                                e.printStackTrace();
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             } catch (InvocationTargetException e) {
