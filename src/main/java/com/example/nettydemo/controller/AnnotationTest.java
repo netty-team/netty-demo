@@ -7,6 +7,7 @@ import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.pool.BussinessTheadPool;
 import com.example.nettydemo.service.TestService;
 import com.example.nettydemo.service.impl.TestServiceImpl;
+import com.example.nettydemo.utils.SpringContextUtils;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
@@ -14,9 +15,11 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.sql.DataSource;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,12 +44,18 @@ public class AnnotationTest {
     private TestService service;
 //    private TestService service = new TestServiceImpl();
 
+    @Qualifier("primaryDataSource")
+    @Autowired
+    private DataSource db;
+
     @NettyRequestMapping(path = "/test", method = {HTTPMethod.GET, HTTPMethod.POST})
     public void test(FullHttpRequest req, FullHttpResponse rep){
 
         System.out.println();
         service.dotest(req, rep);
         System.out.println();
+
+
     }
 
 

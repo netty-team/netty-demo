@@ -11,6 +11,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
+import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
@@ -29,6 +30,7 @@ import java.util.Set;
  */
 @ChannelHandler.Sharable
 @Component
+@Slf4j
 public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
     private String content = "";
@@ -76,8 +78,8 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
             FullHttpRequest request = (FullHttpRequest) msg;
             boolean keepaLive = HttpUtil.isKeepAlive(request);
             HttpMethod method = request.method();
-            System.out.println("method:" + method);
-            System.out.println("uri:" + request.uri());
+            log.info("method:" + method);
+            log.info("uri:" + request.uri());
             String uri = request.uri().replace("/", "").trim();
 
             FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
