@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @NettyController(path = "/class")
-@Component
 public class CmdbTest {
 
     @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
