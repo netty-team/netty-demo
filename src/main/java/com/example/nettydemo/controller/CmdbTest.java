@@ -2,6 +2,8 @@ package com.example.nettydemo.controller;
 
 import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
+import com.example.nettydemo.classloader.lang.DynamicClassLoader;
+import com.example.nettydemo.classloader.util.ReflectUtil;
 import com.example.nettydemo.enums.ErrorEnum;
 import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.except.CmdbException;
@@ -15,6 +17,8 @@ import javax.sql.DataSource;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,56 +26,107 @@ import java.util.Map;
 public class CmdbTest {
 
     @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
-    public void testAnnotation(FullHttpRequest req, FullHttpResponse rep){
+    public void testAnnotation(FullHttpRequest req, FullHttpResponse rep) {
 
-        System.out.println("hello world: " + req + " : " + rep);
+        for (int j = 1; j <= 5; j++) {
 
-        try {
-            Class<?> springContextUtilsClass = Class.forName("com.example.nettydemo.utils.SpringContextUtils");
-            Method getBean = springContextUtilsClass.getMethod("getBean", String.class);
-            DataSource dataSource = (DataSource)getBean.invoke(springContextUtilsClass.newInstance(), "primaryDataSource");
+            double count = Math.pow(10, j);
+
+            System.out.println("开始时间------" + new Date());
+            long time = new Date().getTime();
+            for (double i = 0; i < count; i++) {
+
+                try {
+                    Class<?> springContextUtilsClass = Class.forName("com.example.nettydemo.utils.SpringContextUtils");
+                    Method getBean = springContextUtilsClass.getMethod("getBean", String.class);
+                    DataSource dataSource = (DataSource) getBean.invoke(springContextUtilsClass.newInstance(), "primaryDataSource");
 
 
-            Connection con = null;
-            PreparedStatement preparedStatement = null;
-            String sql = "insert into test values(?,?,?)";
+                    Connection con = null;
+                    PreparedStatement preparedStatement = null;
+                    ResultSet resultSet = null;
+//            String sql = "insert into test values(?,?,?)";
+                    String sql = "select * from test";
 
-            try {
-                con = dataSource.getConnection();
-                preparedStatement = con.prepareStatement(sql);
-                preparedStatement.setInt(1,21);
-                preparedStatement.setString(2,"lixinping");
-                preparedStatement.setString(3,"18");
-                preparedStatement.executeUpdate();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }  finally {
-                con.close();
-                preparedStatement.close();
+                    try {
+                        con = dataSource.getConnection();
+                        preparedStatement = con.prepareStatement(sql);
+                        resultSet = preparedStatement.executeQuery();
+                        int row = resultSet.getRow();
+                        while (resultSet.next()) {
+                            int id = resultSet.getInt("id");
+                            String name = resultSet.getString("name");
+                            String age = resultSet.getString("aget");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        con.close();
+                        preparedStatement.close();
+                        resultSet.close();
+                    }
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
-            System.out.println();
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("当前" + count + "次压测耗时：--------" + (new Date().getTime() - time));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        System.out.println("本地测试结束。。。。");
 
     }
 
-    public void doTask(FullHttpRequest request, FullHttpResponse response){
+
+    @NettyRequestMapping(path = "/plugin", method = HTTPMethod.GET)
+    public void testPlugin(FullHttpRequest req, FullHttpResponse rep) {
+        for (int j = 1; j <= 5; j++) {
+
+            double count = Math.pow(10, j);
+
+            System.out.println("开始时间------" + new Date());
+            long time = new Date().getTime();
+            for (double i = 0; i < count; i++) {
+                try {
+                    Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+                    Method testA = ReflectUtil.getMethod("testAnnotation", aClass);
+                    testA.invoke(aClass.newInstance());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("当前" + count + "次压测耗时：--------" + (new Date().getTime() - time));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("插件测试结束。。。。");
+
+
+
+
+    }
+
+    public void doTask(FullHttpRequest request, FullHttpResponse response) {
 
         try {
 
             String contentTypes = request.headers().get("Content-Type");
-            if (contentTypes == null){
+            if (contentTypes == null) {
                 throw new CmdbException(ErrorEnum.REQUEST_CONTENT_TYPE);
             }
             String[] contentArrays = contentTypes.split(";");
 
             String contentType = contentArrays[0];
 
-            switch (contentType){
+            switch (contentType) {
                 case "application/json":
                     doJson(request, response);
                     break;
@@ -85,7 +140,7 @@ public class CmdbTest {
                     throw new CmdbException(ErrorEnum.REQUEST_INVALID_CT);
             }
 
-        }catch (CmdbException e1){
+        } catch (CmdbException e1) {
             e1.printStackTrace();
             NettyVo vo = NettyVoUtils.failed(e1.getCode(), e1.getMessage());
 
@@ -93,7 +148,7 @@ public class CmdbTest {
             ResponseUtils.redirectResult(response);
             return;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             NettyVo vo = NettyVoUtils.failed(600, e.getMessage());
 
@@ -119,7 +174,7 @@ public class CmdbTest {
 
         ResponseUtils.doJsonResult(vo, response);
 
-        
+
     }
 
 

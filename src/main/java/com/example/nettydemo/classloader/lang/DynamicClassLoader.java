@@ -15,119 +15,139 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 public class DynamicClassLoader extends AggressiveClassLoader {
-	LinkedList<F1<String, byte[]>> loaders = new LinkedList<>();
+    public static String projectPath;
 
-	public DynamicClassLoader(String... paths) {
-		for (String path : paths) {
-			File file = new File(path);
+    static {
+        projectPath = DynamicClassLoader.class.getResource("/").getPath();
+    }
 
-			F1<String, byte[]> loader = loader(file);
-			if (loader == null) {
-				throw new RuntimeException("Path not exists " + path);
-			}
-			loaders.add(loader);
-		}
-	}
+    LinkedList<F1<String, byte[]>> loaders = new LinkedList<>();
 
-	@SuppressWarnings("UnusedDeclaration")
-	public DynamicClassLoader(Collection<File> paths) {
-		for (File file : paths) {
-			F1<String, byte[]> loader = loader(file);
-			if (loader == null) {
-				throw new RuntimeException("Path not exists " + file.getPath());
-			}
-			loaders.add(loader);
-		}
-	}
-	
+    public DynamicClassLoader(String... paths) {
+        for (String path : paths) {
+            File file = new File(path);
 
-	public static F1<String, byte[]> loader(File file) {
-		if (!file.exists()) {
-			return null;
-		} else if (file.isDirectory()) {
-			return dirLoader(file);
-		} else {
-			try {
-				final JarFile jarFile = new JarFile(file);
+            F1<String, byte[]> loader = loader(file);
+            if (loader == null) {
+                throw new RuntimeException("Path not exists " + path);
+            }
+            loaders.add(loader);
+        }
+    }
 
-				return jarLoader(jarFile);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
+    @SuppressWarnings("UnusedDeclaration")
+    public DynamicClassLoader(Collection<File> paths) {
+        for (File file : paths) {
+            F1<String, byte[]> loader = loader(file);
+            if (loader == null) {
+                throw new RuntimeException("Path not exists " + file.getPath());
+            }
+            loaders.add(loader);
+        }
+    }
 
-	private static File findFile(String filePath, File classPath) {
-		File file = new File(classPath, filePath);
-		return file.exists() ? file : null;
-	}
 
-	public static F1<String, byte[]> dirLoader(final File dir) {
-		return filePath -> {
-			File file = findFile(filePath, dir);
-			if (file == null) {
-				return null;
-			}
+    public static F1<String, byte[]> loader(File file) {
+        if (!file.exists()) {
+            return null;
+        } else if (file.isDirectory()) {
+            return dirLoader(file);
+        } else {
+            try {
+                final JarFile jarFile = new JarFile(file);
 
-			return FileUtil.readFileToBytes(file);
-		};
-	}
+                return jarLoader(jarFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
-	private static F1<String, byte[]> jarLoader(final JarFile jarFile) {
-		return new F1<String, byte[]>() {
-			public byte[] e(String filePath) {
-				ZipEntry entry = jarFile.getJarEntry(filePath);
-				if (entry == null) {
-					return null;
-				}
-				try {
-					return IOUtil.readData(jarFile.getInputStream(entry));
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
+    private static File findFile(String filePath, File classPath) {
+        File file = new File(classPath, filePath);
+        return file.exists() ? file : null;
+    }
 
-			@Override
-			protected void finalize() throws Throwable {
-				IOUtil.close(jarFile);
-				super.finalize();
-			}
-		};
-	}
-	
-	@Override
-	protected byte[] loadNewClass(String name) {
+    public static F1<String, byte[]> dirLoader(final File dir) {
+        return filePath -> {
+            File file = findFile(filePath, dir);
+            if (file == null) {
+                return null;
+            }
+
+            return FileUtil.readFileToBytes(file);
+        };
+    }
+
+    private static F1<String, byte[]> jarLoader(final JarFile jarFile) {
+        return new F1<String, byte[]>() {
+            public byte[] e(String filePath) {
+                ZipEntry entry = jarFile.getJarEntry(filePath);
+                if (entry == null) {
+                    return null;
+                }
+                try {
+                    return IOUtil.readData(jarFile.getInputStream(entry));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            protected void finalize() throws Throwable {
+                IOUtil.close(jarFile);
+                super.finalize();
+            }
+        };
+    }
+
+    @Override
+    protected byte[] loadNewClass(String name) {
 //		System.out.println("Loading class " + name);
-		for (F1<String, byte[]> loader : loaders) {
-			byte[] data = loader.e(AggressiveClassLoader.toFilePath(name));
-			if (data!= null) {
-				return data;
-			}
-		}
-		return null;
-	}
+        for (F1<String, byte[]> loader : loaders) {
+            byte[] data = loader.e(AggressiveClassLoader.toFilePath(name));
+            if (data != null) {
+                return data;
+            }
+        }
+        return null;
+    }
 
-	/**
+
+    /**
+     * 动态加载类
+     * @param jarPath
+     * @param classname
+     * @return
+     */
+    public static Class<?> getClazz(String jarPath, String classname) {
+        Class<?> clazz = new DynamicClassLoader(jarPath)
+                .load(classname);
+        return clazz;
+    }
+
+    /**
      * 测试代码
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		try {
-			String projectPath = DynamicClassLoader.class.getResource("/").getPath();
-			System.out.println("-----------------project path-------" + projectPath);
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        try {
+            /*Class<?> aClass = getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+            Method testA = ReflectUtil.getMethod("testA", aClass);
+            testA.invoke(aClass.newInstance(),"");
 
-			Class<?> testService = new DynamicClassLoader(projectPath + "WebRoot\\WEB-INF\\lib\\test.jar")
-					.load("com.lxp.service.TestServiceImpl");
-
-			//获取TestServiceImpl类对象的eat()方法
-			Method eat = ReflectUtil.getMethod("eat", testService);
-			if (eat != null) {
-				eat.invoke(testService.newInstance());
-			}
+            Class<?> bClass = getClazz("D:\\class\\test-b.jar", "com.lxp.service.other.TestB");
+            Method testB = bClass.getMethod("testB");
+            testB.invoke(bClass.newInstance());
+*/
 
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+            Class<?> aClass = getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+            Method testA = ReflectUtil.getMethod("testAnnotation", aClass);
+            testA.invoke(aClass.newInstance());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

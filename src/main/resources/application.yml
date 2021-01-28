@@ -33,7 +33,7 @@ primary:
     druid:
       #监控统计拦截的filters
       filters: stat
-      driverClassName: com.mysql.jdbc.Driver
+      driverClassName: com.mysql.cj.jdbc.Driver
       #配置基本属性
       url: jdbc:mysql://10.10.49.9:3306/netty?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&autoReconnect=true&useSSL=false
       username: root
@@ -63,7 +63,7 @@ back:
     druid:
       #监控统计拦截的filters
       filters: stat
-      driverClassName: com.mysql.jdbc.Driver
+      driverClassName: com.mysql.cj.jdbc.Driver
       #配置基本属性
       url: jdbc:mysql://127.0.0.1:3306/idcv?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&autoReconnect=true&useSSL=false
       username: root
