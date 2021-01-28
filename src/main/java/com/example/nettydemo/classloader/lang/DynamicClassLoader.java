@@ -113,15 +113,11 @@ public class DynamicClassLoader extends AggressiveClassLoader {
 	 */
 	public static void main(String[] args) {
 		try {
-			Class<?> testServiceClass = Class.forName("com.lxp.service.TestServiceImpl");
-//            Class<TestServiceImpl> testServiceClass = TestServiceImpl.class;
-			System.out.println("classname-------------" + testServiceClass.getName());
-
 			String projectPath = DynamicClassLoader.class.getResource("/").getPath();
 			System.out.println("-----------------project path-------" + projectPath);
 
 			Class<?> testService = new DynamicClassLoader(projectPath + "WebRoot\\WEB-INF\\lib\\test.jar")
-					.load(testServiceClass.getName());
+					.load("com.lxp.service.TestServiceImpl");
 
 			//获取TestServiceImpl类对象的eat()方法
 			Method eat = ReflectUtil.getMethod("eat", testService);

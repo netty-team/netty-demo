@@ -10,8 +10,11 @@ import com.example.nettydemo.utils.ResponseUtils;
 import com.example.nettydemo.vo.NettyVo;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
-import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,9 +22,40 @@ import java.util.Map;
 public class CmdbTest {
 
     @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
-    public void testAnnotation(String req, String rep){
+    public void testAnnotation(FullHttpRequest req, FullHttpResponse rep){
 
         System.out.println("hello world: " + req + " : " + rep);
+
+        try {
+            Class<?> springContextUtilsClass = Class.forName("com.example.nettydemo.utils.SpringContextUtils");
+            Method getBean = springContextUtilsClass.getMethod("getBean", String.class);
+            DataSource dataSource = (DataSource)getBean.invoke(springContextUtilsClass.newInstance(), "primaryDataSource");
+
+
+            Connection con = null;
+            PreparedStatement preparedStatement = null;
+            String sql = "insert into test values(?,?,?)";
+
+            try {
+                con = dataSource.getConnection();
+                preparedStatement = con.prepareStatement(sql);
+                preparedStatement.setInt(1,21);
+                preparedStatement.setString(2,"lixinping");
+                preparedStatement.setString(3,"18");
+                preparedStatement.executeUpdate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }  finally {
+                con.close();
+                preparedStatement.close();
+            }
+
+            System.out.println();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
