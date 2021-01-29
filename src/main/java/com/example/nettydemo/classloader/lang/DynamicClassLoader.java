@@ -144,8 +144,8 @@ public class DynamicClassLoader extends AggressiveClassLoader {
 
 
             Class<?> aClass = getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
-            Method testA = ReflectUtil.getMethod("testAnnotation", aClass);
-            testA.invoke(aClass.newInstance());
+            Method testA = ReflectUtil.getMethod("testA", aClass);
+            testA.invoke(aClass.newInstance(),"a");
         } catch (Exception e) {
             e.printStackTrace();
         }

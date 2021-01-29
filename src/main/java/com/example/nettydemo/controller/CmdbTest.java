@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 
 import javax.sql.DataSource;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,13 +29,13 @@ public class CmdbTest {
     @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
     public void testAnnotation(FullHttpRequest req, FullHttpResponse rep) {
 
-        for (int j = 1; j <= 5; j++) {
+        for (int j = 0; j < 10; j++) {
 
-            double count = Math.pow(10, j);
+            double pow = Math.pow(7, j);
 
             System.out.println("开始时间------" + new Date());
             long time = new Date().getTime();
-            for (double i = 0; i < count; i++) {
+            for (double i = 0; i < pow; i++) {
 
                 try {
                     Class<?> springContextUtilsClass = Class.forName("com.example.nettydemo.utils.SpringContextUtils");
@@ -47,7 +48,7 @@ public class CmdbTest {
                     ResultSet resultSet = null;
 //            String sql = "insert into test values(?,?,?)";
                     String sql = "select * from test";
-
+/*
                     try {
                         con = dataSource.getConnection();
                         preparedStatement = con.prepareStatement(sql);
@@ -64,14 +65,14 @@ public class CmdbTest {
                         con.close();
                         preparedStatement.close();
                         resultSet.close();
-                    }
+                    }*/
 
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            System.out.println("当前" + count + "次压测耗时：--------" + (new Date().getTime() - time));
+            System.out.println("当前" + pow + "次压测耗时：--------" + (new Date().getTime() - time));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -85,22 +86,22 @@ public class CmdbTest {
 
     @NettyRequestMapping(path = "/plugin", method = HTTPMethod.GET)
     public void testPlugin(FullHttpRequest req, FullHttpResponse rep) {
-        for (int j = 1; j <= 5; j++) {
 
-            double count = Math.pow(10, j);
-
+        for (int j = 0; j < 10; j++) {
+            Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+            double pow = Math.pow(7, j);
             System.out.println("开始时间------" + new Date());
             long time = new Date().getTime();
-            for (double i = 0; i < count; i++) {
+            for (double i = 0; i < pow; i++) {
                 try {
-                    Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+
                     Method testA = ReflectUtil.getMethod("testAnnotation", aClass);
                     testA.invoke(aClass.newInstance());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            System.out.println("当前" + count + "次压测耗时：--------" + (new Date().getTime() - time));
+            System.out.println("当前" + pow + "次压测耗时：--------" + (new Date().getTime() - time));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -175,6 +176,26 @@ public class CmdbTest {
         ResponseUtils.doJsonResult(vo, response);
 
 
+    }
+
+    /**
+     * 测试一个类中调用另一个类的情况
+     * @param request
+     * @param response
+     */
+    @NettyRequestMapping(path = "/anotherFun",method = HTTPMethod.GET)
+    public void anotherFun(FullHttpRequest request,FullHttpResponse response){
+        try {
+            Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+            Method testA = ReflectUtil.getMethod("testA", aClass);
+            testA.invoke(aClass.newInstance(),"a");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
     }
 
 
