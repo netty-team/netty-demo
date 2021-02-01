@@ -14,12 +14,20 @@ netty:
   # 绑定的网卡
   url: 0.0.0.0
 
+#定时策略
+scheduler:
+  cron: ${SCHEDULER_CRON:-}  #设置为 -  则关闭定时器
+#  cron: "*/10 * * * * *"
+
 #bussiness线程池配置
 thredpool:
   coreSize: ${POOL_CORESIZE:1}
   maxSize: ${POOL_MAXSIZE:200}
   queueCapacity: ${POOL_QUEUE:10000}
   threadNamePrefix: "cmdb-thread-"
+  isDaemon: false
+  nameFormat: "business-pool-%d"
+  threadCount: ${BUSSINESS_POOL_COUNT:200}
 
 #数据库连接
 spring:
