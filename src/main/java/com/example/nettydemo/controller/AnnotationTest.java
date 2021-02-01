@@ -14,6 +14,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 @NettyController(path = "/netty")
+@Slf4j
 public class AnnotationTest {
 
     public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
@@ -50,9 +52,9 @@ public class AnnotationTest {
     @NettyRequestMapping(path = "/test", method = {HTTPMethod.GET, HTTPMethod.POST})
     public void test(FullHttpRequest req, FullHttpResponse rep){
 
-        System.out.println();
+        log.info("/test info");
         service.dotest(req, rep);
-        System.out.println();
+        log.debug("/test debug");
 
 
     }

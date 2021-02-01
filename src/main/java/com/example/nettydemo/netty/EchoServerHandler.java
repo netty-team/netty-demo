@@ -3,8 +3,13 @@ package com.example.nettydemo.netty;
 import com.example.nettydemo.annotation.FileHandler;
 import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
+import com.example.nettydemo.entity.TaskDTO;
+import com.example.nettydemo.enums.ErrorEnum;
 import com.example.nettydemo.enums.HTTPMethod;
+import com.example.nettydemo.utils.NettyVoUtils;
+import com.example.nettydemo.utils.ResponseUtils;
 import com.example.nettydemo.utils.SpringContextUtils;
+import com.example.nettydemo.vo.NettyVo;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -21,9 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /***
  * 服务端自定义业务处理handler
@@ -39,7 +42,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
     private final static String BAD_REQUEST = "400";
     private final static String INTERNAL_SERVER_ERROR = "500";
     private static Map<String, HttpResponseStatus> mapStatus = new HashMap<String, HttpResponseStatus>();
-    private static Map<String, Class<?>> controllerMap = new HashMap<>();
+    private static Map<String, List<Class<?>>> controllerMap = new HashMap<>();
 
     static {
         mapStatus.put(LOC, HttpResponseStatus.FOUND);
@@ -58,8 +61,12 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
             NettyController annotation = nettyController.getAnnotation(NettyController.class);
             String path = annotation.path();
 
-            controllerMap.put(path, nettyController);
-
+            List<Class<?>> classList = controllerMap.get(path);
+            if (classList == null){
+                classList = new ArrayList<>();
+                controllerMap.put(path, classList);
+            }
+            classList.add(nettyController);
         });
     }
 
@@ -109,68 +116,87 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
         String uri = request.uri();
         String reqMethodName = request.method().name();
 
+        TaskDTO dto = new TaskDTO();
+        dto.setDeail(false);
+
         controllerMap.forEach((k, v) -> {
 
             if (uri.startsWith(k)){
                 String subK = uri.substring(k.length());
 
-                Object bean = SpringContextUtils.getBean(v);
-                Method[] methods = v.getMethods();
+                boolean isDeail = false;
 
-                for (Method method: methods){
+                for (Class<?> clazz: v){
 
-                    NettyRequestMapping annotation = method.getAnnotation(NettyRequestMapping.class);
-                    if (annotation != null){
+                    //处理完毕 跳出循环
+                    if (isDeail){
+                        break;
+                    }
 
-                        String methodPath = annotation.path();
-                        HTTPMethod[] httpMethodArray = annotation.method();
+                    Object bean = SpringContextUtils.getBean(clazz);
+                    Method[] methods = clazz.getMethods();
 
-                        //判断方法路径是否一致
-                        if (subK.equals(methodPath)){
+                    for (Method method: methods){
 
-                            // 判断请求方式是否包含
-                            boolean flag = false;
-                            for(int i = 0; i < httpMethodArray.length; i++){
+                        NettyRequestMapping annotation = method.getAnnotation(NettyRequestMapping.class);
+                        if (annotation != null){
 
-                                if (reqMethodName.equals(httpMethodArray[i].getValue())){
-                                    flag = true;
-                                }
-                            }
+                            String methodPath = annotation.path();
+                            HTTPMethod[] httpMethodArray = annotation.method();
 
-                            if (!flag){
-                                continue;
-                            }
+                            //判断方法路径是否一致
+                            if (subK.equals(methodPath)){
 
-                            try {
+                                // 判断请求方式是否包含
+                                boolean flag = false;
+                                for(int i = 0; i < httpMethodArray.length; i++){
 
-                                FileHandler fileHandler = method.getAnnotation(FileHandler.class);
-                                if (fileHandler != null){
-                                    method.invoke(bean, ctx, request, response);
-                                    break;
-                                }else {
-                                    method.invoke(bean, request, response);
-                                    break;
+                                    if (reqMethodName.equals(httpMethodArray[i].getValue())){
+                                        flag = true;
+                                    }
                                 }
 
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
-                            }
+                                if (!flag){
+                                    continue;
+                                }
 
+                                try {
+
+                                    FileHandler fileHandler = method.getAnnotation(FileHandler.class);
+                                    if (fileHandler != null){
+                                        method.invoke(bean, ctx, request, response);
+                                        isDeail = true;
+                                        dto.setDeail(true);
+                                        break;
+                                    }else {
+                                        method.invoke(bean, request, response);
+                                        isDeail = true;
+                                        dto.setDeail(true);
+                                        break;
+                                    }
+
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
                         }
                     }
                 }
             }
         });
 
-//        if (!isExist){
-//
-//            NettyVo vo = NettyVoUtils.failed(ErrorEnum.REQUEST_INVALID_METHOD.getCode(),
-//                    "没有找到适配的请求方法");
-//
-//            ResponseUtils.doJsonResult(vo, response);
-//        }
+        if (!dto.isDeail()){
+            log.info("没有找到适配的处理方法：{} {}", reqMethodName, uri);
+
+            NettyVo nettyVo = NettyVoUtils.failed(ErrorEnum.REQUEST_INVALID);
+            ResponseUtils.doJsonResult(nettyVo, response);
+
+
+        }
+
     }
 
 

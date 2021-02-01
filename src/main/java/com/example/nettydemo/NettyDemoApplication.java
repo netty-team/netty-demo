@@ -11,9 +11,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableConfigurationProperties
+@EnableScheduling
 public class NettyDemoApplication implements CommandLineRunner {
 
     @Value("${netty.json.port}")
@@ -64,14 +66,14 @@ public class NettyDemoApplication implements CommandLineRunner {
 //        ChannelFuture startFile = server.start(url, filePort, fileServerHandler);
 
         //初始化线程池
-        initThreadPool();
+//        initThreadPool();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
 
                 server.destroy();
-                theadPool = null;
+//                theadPool = null;
 
             }
         });
