@@ -111,9 +111,8 @@ public class FileServerHandler extends ChannelInboundHandlerAdapter {
             }
         }
         RandomAccessFile raf;
-        File file1 = new File("/Users/xyt/IdeaProjects/netty-demo/src/main/java/com/example/nettydemo/vo/NettyVo.java");
         try {
-            raf = new RandomAccessFile(file1, "r");
+            raf = new RandomAccessFile(file, "r");
         } catch (FileNotFoundException ignore) {
             sendError(ctx, NOT_FOUND);
             return;
@@ -121,7 +120,7 @@ public class FileServerHandler extends ChannelInboundHandlerAdapter {
         long fileLength = raf.length();
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         HttpHeaders.setContentLength(response, fileLength);
-        setContentTypeHeader(response, file1);
+        setContentTypeHeader(response, file);
 //        setDateAndCacheHeaders(response, file);
         if (HttpHeaders.isKeepAlive(request)) {
             response.headers().set("CONNECTION", HttpHeaders.Values.KEEP_ALIVE);

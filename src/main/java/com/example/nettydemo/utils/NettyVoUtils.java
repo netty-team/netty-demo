@@ -1,5 +1,6 @@
 package com.example.nettydemo.utils;
 
+import com.example.nettydemo.enums.ErrorEnum;
 import com.example.nettydemo.vo.NettyVo;
 
 public class NettyVoUtils {
@@ -38,5 +39,7 @@ public class NettyVoUtils {
         return doNetty(code, msg, data);
     }
 
-
+    public static NettyVo failed(ErrorEnum requestInvalid) {
+        return failed(requestInvalid.getCode(), requestInvalid.getMsg());
+    }
 }

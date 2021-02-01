@@ -1,5 +1,6 @@
 package com.example.nettydemo.netty;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -8,10 +9,11 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * 服务端
@@ -34,7 +36,17 @@ public class EchoServer {
      */
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private EventLoopGroup bussinessthread = null;
     private Channel channel;
+
+    @Value("${thredpool.isDaemon}")
+    private boolean isDaemon = false;
+
+    @Value("${thredpool.nameFormat}")
+    private String nameFormat;
+
+    @Value("${thredpool.threadCount}")
+    private int threadCount;
 
 //    @Autowired
 //    EchoServerHandler serverHandler;
@@ -50,6 +62,11 @@ public class EchoServer {
 //        final EchoServerHandler serverHandler = new EchoServerHandler();
         ChannelFuture f = null;
         try {
+
+            ThreadFactory threadFactory = new ThreadFactoryBuilder().setDaemon(isDaemon).setNameFormat(nameFormat).build();
+            final EventLoopGroup bussinessGroup = new NioEventLoopGroup(threadCount, threadFactory);
+            bussinessthread = bussinessGroup;
+
             //ServerBootstrap负责初始化netty服务器，并且开始监听端口的socket请求
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -70,7 +87,7 @@ public class EchoServer {
                             socketChannel.pipeline().addLast(new HttpServerCodec());
                             socketChannel.pipeline().addLast(new HttpObjectAggregator(65536));
                             socketChannel.pipeline().addLast(new ChunkedWriteHandler());
-                            socketChannel.pipeline().addLast(adapter);
+                            socketChannel.pipeline().addLast(bussinessGroup, adapter);
 
                         }
                     });
@@ -98,7 +115,12 @@ public class EchoServer {
         if(channel != null) { channel.close();}
         workerGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();
+        bussinessthread.shutdownGracefully();
         log.info("Shutdown Netty Server Success!");
+    }
+
+    public EventLoopGroup getBussiness(){
+        return bussinessthread;
     }
 
 }
