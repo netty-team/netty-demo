@@ -9,6 +9,8 @@ import com.example.nettydemo.classloader.util.ReflectUtil;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.jar.JarFile;
@@ -79,6 +81,11 @@ public class DynamicClassLoader extends AggressiveClassLoader {
         };
     }
 
+    /**
+     * 读取加载jar包
+     * @param jarFile
+     * @return
+     */
     private static F1<String, byte[]> jarLoader(final JarFile jarFile) {
         return new F1<String, byte[]>() {
             public byte[] e(String filePath) {
@@ -143,9 +150,36 @@ public class DynamicClassLoader extends AggressiveClassLoader {
 */
 
 
-            Class<?> aClass = getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
+            /*Class<?> aClass = getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
             Method testA = ReflectUtil.getMethod("testA", aClass);
             testA.invoke(aClass.newInstance(),"a");
+*/
+
+            /*DynamicClassLoader dynamicClassLoader = new DynamicClassLoader("D:\\class\\test-a.jar");
+            Class<?> testA = dynamicClassLoader.load("com.lxp.service.TestA");
+            Method aMethod = ReflectUtil.getMethod("testA", testA);
+            aMethod.invoke(testA.newInstance(), "a");
+
+
+            Class<?> testB = dynamicClassLoader.load("com.lxp.service.TestB");
+            Method bMethod = ReflectUtil.getMethod("testB", testB);
+            bMethod.invoke(testB.newInstance());*/
+
+
+            //2.动态加载jar包
+            URL url1 = new URL("file:D:\\class\\test-a.jar");
+            URLClassLoader myClassLoader = new URLClassLoader(new URL[]{url1}, Thread.currentThread()
+                    .getContextClassLoader());
+            Class<?> testA = myClassLoader.loadClass("com.lxp.service.TestA");
+            Method aMethod = ReflectUtil.getMethod("testA", testA);
+            aMethod.invoke(testA.newInstance(), "a");
+
+
+            Class<?> testB = myClassLoader.loadClass("com.lxp.service.TestB");
+            Method bMethod = ReflectUtil.getMethod("testB", testB);
+            bMethod.invoke(testB.newInstance());
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }

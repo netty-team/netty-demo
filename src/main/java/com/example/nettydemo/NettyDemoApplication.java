@@ -55,6 +55,10 @@ public class NettyDemoApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        //初始化加载外部jar包插件
+        /*String jarPath = "D:\\class\\";
+        String[] jarList = JarClazzUtil.getJarList(jarPath);
+        JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);*/
 
         ChannelFuture startJson = server.start(url, jsonPort, echoServerHandler);
 //        ChannelFuture startFile = server.start(url, filePort, fileServerHandler);
@@ -62,7 +66,7 @@ public class NettyDemoApplication implements CommandLineRunner {
         //初始化线程池
         initThreadPool();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
 
@@ -77,7 +81,7 @@ public class NettyDemoApplication implements CommandLineRunner {
 
     }
 
-    public void initThreadPool(){
+    public void initThreadPool() {
 
         theadPool = BussinessTheadPool.Instance();
         theadPool.setCorePoolSize(coreSize);

@@ -1,21 +1,26 @@
 package com.example.nettydemo.classloader.util;
 
+import com.example.nettydemo.classloader.lang.DynamicClassLoader;
+
 import java.io.File;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class JarClazzUtil {
+
+    //利用此对象从虚拟内存中获取类对象，实现动态更新
+    public static DynamicClassLoader dynamicClassLoader = null;
 
     /**
      * 获取目录下的所有jar包列表
      *
      * @param jarPath
      */
-    public static Map<String, Map<String, String>> getJarList(String jarPath) throws Exception {
+    public static String[] getJarList(String jarPath) throws Exception {
         Map<String, Map<String, String>> jarMap = new HashMap<>();
+        List<String> list = new ArrayList<>();
         File file = new File(jarPath);
         File[] files = file.listFiles();
         for (File fe : files) {
@@ -27,12 +32,16 @@ public class JarClazzUtil {
                 } else {
                     jarAllPath = jarPath + File.separator + name;
                 }
-                Map<String, String> clazzMap = getJarName(jarAllPath);
-                jarMap.put(jarAllPath, clazzMap);
+                list.add(jarAllPath);
+
+//                Map<String, String> clazzMap = getJarName(jarAllPath);
+//                jarMap.put(jarAllPath, clazzMap);
             }
 
         }
-        return jarMap;
+
+        String[] array = list.toArray(new String[list.size()]);
+        return array;
     }
 
 
@@ -63,6 +72,7 @@ public class JarClazzUtil {
                     //打印类名
 //                    System.out.println("全类名:" + className);
 
+
                     clazzMap.put(className, className);
                 }
             }
@@ -71,19 +81,21 @@ public class JarClazzUtil {
     }
 
 
-
     /**
      * 测试
+     *
      * @param args
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
         //jar包路径
         String jarPath = "D:\\class\\";
+        String[] jarList = getJarList(jarPath);
+        DynamicClassLoader dynamicClassLoader = new DynamicClassLoader(jarList);
 
-        Map<String, Map<String, String>> jarList = getJarList(jarPath);
-        System.out.println();
-
+        Class<?> testA = dynamicClassLoader.load("com.lxp.service.TestA");
+        Method aMethod = ReflectUtil.getMethod("testA", testA);
+        aMethod.invoke(testA.newInstance(), "a");
     }
 
 }

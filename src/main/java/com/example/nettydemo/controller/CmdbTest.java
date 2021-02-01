@@ -14,7 +14,6 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 
 import javax.sql.DataSource;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -178,25 +177,6 @@ public class CmdbTest {
 
     }
 
-    /**
-     * 测试一个类中调用另一个类的情况
-     * @param request
-     * @param response
-     */
-    @NettyRequestMapping(path = "/anotherFun",method = HTTPMethod.GET)
-    public void anotherFun(FullHttpRequest request,FullHttpResponse response){
-        try {
-            Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");
-            Method testA = ReflectUtil.getMethod("testA", aClass);
-            testA.invoke(aClass.newInstance(),"a");
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        }
-    }
 
 
 }
