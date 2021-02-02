@@ -1,5 +1,7 @@
 package com.example.nettydemo;
 
+import com.example.nettydemo.classloader.lang.DynamicClassLoader;
+import com.example.nettydemo.classloader.util.JarClazzUtil;
 import com.example.nettydemo.netty.EchoServer;
 import com.example.nettydemo.netty.EchoServerHandler;
 import com.example.nettydemo.netty.FileServerHandler;
@@ -39,6 +41,9 @@ public class NettyDemoApplication implements CommandLineRunner {
     @Value("${thredpool.threadNamePrefix}")
     private String threadNamePrefix;
 
+    @Value("${classloader.plugin.path}")
+    private String pluginPath;
+
     @Autowired
     private EchoServer server;
 
@@ -58,9 +63,10 @@ public class NettyDemoApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //初始化加载外部jar包插件
-        /*String jarPath = "D:\\class\\";
-        String[] jarList = JarClazzUtil.getJarList(jarPath);
-        JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);*/
+        String[] jarList = JarClazzUtil.getJarList(pluginPath);
+        JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);
+        JarClazzUtil.clazzMap = JarClazzUtil.getClassMap(jarList);
+
 
         ChannelFuture startJson = server.start(url, jsonPort, echoServerHandler);
 //        ChannelFuture startFile = server.start(url, filePort, fileServerHandler);

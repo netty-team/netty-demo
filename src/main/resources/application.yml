@@ -14,6 +14,11 @@ netty:
   # 绑定的网卡
   url: 0.0.0.0
 
+#插件加载目录
+classloader:
+  plugin:
+    path: "D:\\class"
+
 #定时策略
 scheduler:
   cron: ${SCHEDULER_CRON:-}  #设置为 -  则关闭定时器
