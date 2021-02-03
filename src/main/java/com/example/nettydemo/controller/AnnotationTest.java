@@ -7,7 +7,11 @@ import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.pool.BussinessTheadPool;
 import com.example.nettydemo.service.TestService;
 import com.example.nettydemo.service.impl.TestServiceImpl;
+import com.example.nettydemo.utils.HttpClientUtils;
+import com.example.nettydemo.utils.NettyVoUtils;
+import com.example.nettydemo.utils.ResponseUtils;
 import com.example.nettydemo.utils.SpringContextUtils;
+import com.example.nettydemo.vo.NettyVo;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
@@ -15,6 +19,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -57,6 +62,38 @@ public class AnnotationTest {
         log.debug("/test debug");
 
 
+    }
+
+    @Autowired
+    @Qualifier(value = "okHttpClient")
+    private OkHttpClient okHttpClient;
+
+    @NettyRequestMapping(path = "/http", method = HTTPMethod.POST)
+    public void httpTest(FullHttpRequest request, FullHttpResponse response){
+
+        String s = request.content().toString(CharsetUtil.UTF_8);
+
+        HttpClientUtils utils = new HttpClientUtils(okHttpClient);
+        String post = utils.post(s);
+
+        NettyVo success = NettyVoUtils.success(post);
+        ResponseUtils.doJsonResult(success, response);
+    }
+
+    @Autowired
+    @Qualifier(value = "okHttpSSLClient")
+    private OkHttpClient okHttpsClient;
+
+    @NettyRequestMapping(path = "/https", method = HTTPMethod.POST)
+    public void httpsTest(FullHttpRequest request, FullHttpResponse response){
+
+        String s = request.content().toString(CharsetUtil.UTF_8);
+
+        HttpClientUtils utils = new HttpClientUtils(okHttpsClient);
+        String post = utils.post(s);
+
+        NettyVo success = NettyVoUtils.success(post);
+        ResponseUtils.doJsonResult(success, response);
     }
 
 

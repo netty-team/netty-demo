@@ -34,6 +34,11 @@ thredpool:
   nameFormat: "business-pool-%d"
   threadCount: ${BUSSINESS_POOL_COUNT:200}
 
+#okhttp连接池配置
+okhttp:
+  pool:
+    maxIdleConnections: ${HTTP_POOL_CONNECT:100}
+
 #数据库连接
 spring:
   datasource:
