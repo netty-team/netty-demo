@@ -118,6 +118,9 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
         TaskDTO dto = new TaskDTO();
         dto.setDeail(false);
+        dto.setRequest(request);
+        dto.setResponse(response);
+        dto.setCtx(ctx);
 
         controllerMap.forEach((k, v) -> {
 
@@ -162,18 +165,23 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
                                 try {
 
-                                    FileHandler fileHandler = method.getAnnotation(FileHandler.class);
-                                    if (fileHandler != null){
-                                        method.invoke(bean, ctx, request, response);
-                                        isDeail = true;
-                                        dto.setDeail(true);
-                                        break;
-                                    }else {
-                                        method.invoke(bean, request, response);
-                                        isDeail = true;
-                                        dto.setDeail(true);
-                                        break;
-                                    }
+//                                    FileHandler fileHandler = method.getAnnotation(FileHandler.class);
+//                                    if (fileHandler != null){
+//                                        method.invoke(bean, ctx, request, response);
+//                                        isDeail = true;
+//                                        dto.setDeail(true);
+//                                        break;
+//                                    }else {
+//                                        method.invoke(bean, request, response);
+//                                        isDeail = true;
+//                                        dto.setDeail(true);
+//                                        break;
+//                                    }
+
+                                    method.invoke(bean, dto);
+                                    isDeail = true;
+                                    dto.setDeail(true);
+                                    break;
 
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();

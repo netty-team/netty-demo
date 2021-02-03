@@ -3,6 +3,7 @@ package com.example.nettydemo.controller;
 import com.example.nettydemo.annotation.FileHandler;
 import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
+import com.example.nettydemo.entity.TaskDTO;
 import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.pool.BussinessTheadPool;
 import com.example.nettydemo.service.TestService;
@@ -55,10 +56,10 @@ public class AnnotationTest {
     private DataSource db;
 
     @NettyRequestMapping(path = "/test", method = {HTTPMethod.GET, HTTPMethod.POST})
-    public void test(FullHttpRequest req, FullHttpResponse rep){
+    public void test(TaskDTO dto){
 
         log.info("/test info");
-        service.dotest(req, rep);
+        service.dotest(dto.getRequest(), dto.getResponse());
         log.debug("/test debug");
 
 
@@ -69,8 +70,10 @@ public class AnnotationTest {
     private OkHttpClient okHttpClient;
 
     @NettyRequestMapping(path = "/http", method = HTTPMethod.POST)
-    public void httpTest(FullHttpRequest request, FullHttpResponse response){
+    public void httpTest(TaskDTO dto){
 
+        FullHttpRequest request = dto.getRequest();
+        FullHttpResponse response = dto.getResponse();
         String s = request.content().toString(CharsetUtil.UTF_8);
 
         HttpClientUtils utils = new HttpClientUtils(okHttpClient);
@@ -85,8 +88,10 @@ public class AnnotationTest {
     private OkHttpClient okHttpsClient;
 
     @NettyRequestMapping(path = "/https", method = HTTPMethod.POST)
-    public void httpsTest(FullHttpRequest request, FullHttpResponse response){
+    public void httpsTest(TaskDTO dto){
 
+        FullHttpRequest request = dto.getRequest();
+        FullHttpResponse response = dto.getResponse();
         String s = request.content().toString(CharsetUtil.UTF_8);
 
         HttpClientUtils utils = new HttpClientUtils(okHttpsClient);
@@ -99,7 +104,7 @@ public class AnnotationTest {
 
     @NettyRequestMapping(path = "/download", method = {HTTPMethod.GET})
     @FileHandler
-    public void downLoadTest(ChannelHandlerContext ctx, FullHttpRequest request, FullHttpResponse rep) {
+    public void downLoadTest(TaskDTO dto) {
 
 
     }

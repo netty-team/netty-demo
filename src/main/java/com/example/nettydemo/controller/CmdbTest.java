@@ -4,6 +4,7 @@ import com.example.nettydemo.annotation.NettyController;
 import com.example.nettydemo.annotation.NettyRequestMapping;
 import com.example.nettydemo.classloader.lang.DynamicClassLoader;
 import com.example.nettydemo.classloader.util.ReflectUtil;
+import com.example.nettydemo.entity.TaskDTO;
 import com.example.nettydemo.enums.ErrorEnum;
 import com.example.nettydemo.enums.HTTPMethod;
 import com.example.nettydemo.except.CmdbException;
@@ -26,7 +27,7 @@ import java.util.Map;
 public class CmdbTest {
 
     @NettyRequestMapping(path = "/hhh", method = HTTPMethod.GET)
-    public void testAnnotation(FullHttpRequest req, FullHttpResponse rep) {
+    public void testAnnotation(TaskDTO dto) {
 
         for (int j = 0; j < 10; j++) {
 
@@ -84,7 +85,7 @@ public class CmdbTest {
 
 
     @NettyRequestMapping(path = "/plugin", method = HTTPMethod.GET)
-    public void testPlugin(FullHttpRequest req, FullHttpResponse rep) {
+    public void testPlugin(TaskDTO dto) {
 
         for (int j = 0; j < 10; j++) {
             Class<?> aClass = DynamicClassLoader.getClazz("D:\\class\\test-a.jar", "com.lxp.service.TestA");

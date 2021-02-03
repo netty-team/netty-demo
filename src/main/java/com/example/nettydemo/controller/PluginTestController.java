@@ -5,6 +5,7 @@ import com.example.nettydemo.annotation.NettyRequestMapping;
 import com.example.nettydemo.classloader.lang.DynamicClassLoader;
 import com.example.nettydemo.classloader.util.JarClazzUtil;
 import com.example.nettydemo.classloader.util.ReflectUtil;
+import com.example.nettydemo.entity.TaskDTO;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class PluginTestController {
     private String pluginPath;
 
     @NettyRequestMapping(path = "/test")
-    public void testClassLoader(FullHttpRequest request, FullHttpResponse response) {
+    public void testClassLoader(TaskDTO dto) {
         try {
             String path = "D:\\class\\test.jar";
 
@@ -46,7 +47,7 @@ public class PluginTestController {
      * @param response
      */
     @NettyRequestMapping(path = "/reload")
-    public void reloadClass(FullHttpRequest request, FullHttpResponse response) {
+    public void reloadClass(TaskDTO dto) {
         try {
             String[] jarList = JarClazzUtil.getJarList(pluginPath);
             if (jarList.length > 0) {
@@ -60,7 +61,7 @@ public class PluginTestController {
     }
 
     @NettyRequestMapping(path = "/map")
-    public void testMap(FullHttpRequest request, FullHttpResponse response) {
+    public void testMap(TaskDTO dto) {
         try {
             Map<String, String> clazzMap = JarClazzUtil.clazzMap;
             //根据调用插件传的key值获取类的全限定名
