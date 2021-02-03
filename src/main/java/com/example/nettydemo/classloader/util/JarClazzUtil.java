@@ -24,25 +24,29 @@ public class JarClazzUtil {
      * @param jarPath
      */
     public static String[] getJarList(String jarPath) throws Exception {
-        Map<String, Map<String, String>> jarMap = new HashMap<>();
         List<String> list = new ArrayList<>();
         File file = new File(jarPath);
-        File[] files = file.listFiles();
-        for (File fe : files) {
-            if (fe.getName().endsWith(".jar")) {
-                String name = fe.getName();
-                String jarAllPath;
-                if (jarPath.endsWith(File.separator)) {
-                    jarAllPath = jarPath + name;
-                } else {
-                    jarAllPath = jarPath + File.separator + name;
-                }
-                list.add(jarAllPath);
-            }
+        String[] array = {};
 
+        if (file.exists()) {
+            File[] files = file.listFiles();
+            for (File fe : files) {
+                if (fe.getName().endsWith(".jar")) {
+                    String name = fe.getName();
+                    String jarAllPath;
+                    if (jarPath.endsWith(File.separator)) {
+                        jarAllPath = jarPath + name;
+                    } else {
+                        jarAllPath = jarPath + File.separator + name;
+                    }
+                    list.add(jarAllPath);
+                }
+            }
+            array = list.toArray(new String[list.size()]);
+        } else {
+            log.warn("------------插件路径" + jarPath + "不存在，请重新配置！");
         }
 
-        String[] array = list.toArray(new String[list.size()]);
         return array;
     }
 
@@ -108,17 +112,26 @@ public class JarClazzUtil {
      */
     public static void main(String[] args) throws Exception {
         //jar包路径
-        String jarPath = "D:\\class";
-        String[] jarList = getJarList(jarPath);
+        String jarPath = "D:\\file\\aa";
+
+
+        File file = new File(jarPath);
+        if (!file.exists()) {
+            System.out.println("--------------文件不存在！");
+        }
+
+
+
+        /*String[] jarList = getJarList(jarPath);
         //可以实现只加载一次，下次有更新的话，可以再次调用改方法的接口
         DynamicClassLoader dynamicClassLoader = new DynamicClassLoader(jarList);
-
-        Class<?> testA = dynamicClassLoader.load("com.lxp.service.TestA");
+*/
+        /*Class<?> testA = dynamicClassLoader.load("com.lxp.service.TestA");
 
         Field field = testA.getField("PLUGIN");
 
 
-        Object fieldValue = ReflectUtil.getFieldValue(field, testA);
+        Object fieldValue = ReflectUtil.getFieldValue(field, testA);*/
         System.out.println();
 
     }

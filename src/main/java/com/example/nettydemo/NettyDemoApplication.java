@@ -64,8 +64,10 @@ public class NettyDemoApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         //初始化加载外部jar包插件
         String[] jarList = JarClazzUtil.getJarList(pluginPath);
-        JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);
-        JarClazzUtil.clazzMap = JarClazzUtil.getClassMap(jarList);
+        if (jarList.length > 0) {
+            JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);
+            JarClazzUtil.clazzMap = JarClazzUtil.getClassMap(jarList);
+        }
 
 
         ChannelFuture startJson = server.start(url, jsonPort, echoServerHandler);

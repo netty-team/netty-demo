@@ -49,8 +49,10 @@ public class PluginTestController {
     public void reloadClass(FullHttpRequest request, FullHttpResponse response) {
         try {
             String[] jarList = JarClazzUtil.getJarList(pluginPath);
-            JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);
-            JarClazzUtil.clazzMap = JarClazzUtil.getClassMap(jarList);
+            if (jarList.length > 0) {
+                JarClazzUtil.dynamicClassLoader = new DynamicClassLoader(jarList);
+                JarClazzUtil.clazzMap = JarClazzUtil.getClassMap(jarList);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
